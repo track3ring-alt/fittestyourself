@@ -834,6 +834,7 @@ function unlockReport(){
       never trusted on its own.
    ========================================================= */
 const CHECKOUT_STORAGE_KEY = 'fitnessReportCheckoutState';
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/dRm28qbAz0xI3wT3987kc00';
 
 function saveStateForCheckout(){
   try{
@@ -864,20 +865,9 @@ async function startCheckout(){
 
   saveStateForCheckout();
 
-  try{
-    const resp = await fetch('/.netlify/functions/create-checkout-session', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ returnUrl: window.location.origin + window.location.pathname })
-    });
-    if(!resp.ok) throw new Error('Checkout session creation failed');
-    const data = await resp.json();
-    if(!data.url) throw new Error('No checkout URL returned');
-    window.location.href = data.url; // full navigation to Stripe's hosted page
-  }catch(e){
-    if(btn){ btn.disabled = false; btn.textContent = 'Unlock Now — $0.99'; }
-    alert("We couldn't start checkout. Please try again in a moment.");
-  }
+  // The Payment Link owns the hosted checkout; Stripe must be configured to
+  // redirect back here with ?session_id={CHECKOUT_SESSION_ID} after payment.
+  window.location.href = STRIPE_PAYMENT_LINK;
 }
 
 async function handleCheckoutReturn(){
